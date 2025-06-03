@@ -1,0 +1,793 @@
+part-1 in code snippet youtube
+ctrl+shift+t
+
+Junit
+===========
+-->Junit is a opensource testing framework.it is used to do unit testing 
+-->Unit testing is way to test the smallest part of our code, such as individual methods or classes,to ensure they work as expected.
+
+Why
+----
+->To catch the bugs earlier
+->We can easily identify if something is broken/ or any issue
+
+Note=
+==>code coverage ==>how much our code in junit(covered in junit) we called that much code coverage.
+==>src/test/ -->in this folder we need to write testing related codes
+==>mockito is used to create mock objects(means not real objcets)
+==>ctrl+shift+t => for which class you want to create test class in src/test , 
+         go to that class enter this cmd then it create test class automatically(no need manually create test class for any particular class)
+
+
+example
+========
+-->suppose ProductService class there and inside addProduct method
+
+/* this one is inside productservice class to save products in db */
+
+public Product addProduct(Product product){
+    return productRepo.save(product);
+}
+
+
+//below is writing normal level test to above method
+
+first create service package -->src/test/service
+		|
+then create class ProductServiceTest
+
+
+
+import org.mockito.junit.jupiter.MockitoExtension
+@ExtendWith(MockitoExtension.class)   //for enable mockito
+
+public class ProductServiceTest{
+
+/*create mock object of repo  -->actually we need repository but we should not use real one so that's why*/
+
+@Mock    
+ProductRepository productRepo;
+
+/*it will create mock obj of service and injects this cls have any depencies(this cls has dependency with repo,so repo mock available,repo inject in this service)*/
+
+@InjectMocks  
+ProductService productService;
+
+@Test
+void addProductShouldAddProductSuccessfully(){
+
+Product product = new Product();
+product.setId(1);
+product.setName("soap");
+product.setPrice(100);
+
+/*actually we are not saving directly so we won't get response that's why when it is calling(save is call) product return here ,, this also called stubbing */
+Mockito.when(productRepo.save(product)).thenReturn(product); 
+
+Product addedProduct = productService.addProduct(product);  //calling original method
+
+/*test , actual product == expected product   , Assertion means test some thing */
+
+//Assertions are used to check if the results are as expected.
+Assertions.assertNotNull(addedProduct);                            //response should not null
+Assertions.assertEquals(product.getId(),addedProduct.getId());     //expected(product id,) & actual(response id) should match
+Assertions.assertEquals(product.getName(),addedProduct.getName());
+
+//if above not satisfied then test will fail
+
+}}
+
+---
+
+
+
+
+Unit Testing LifeCycle
+==============================
+->Junit 5 provides test lifecycle using below annotations
+1.@BeforeAll
+2.@BeforeEach
+3.@AfterAll
+4.@AterEach
+
+Note:- All this annonations use is prevent duplicate code.
+
+1.@BeforeAll
+------------------
+->The method which annotated with this annotation executed once before all test menthods in the test class.
+->This annotated method should static .
+->The use of this annotation is , if want any global setup DB Connection , Server Connection etc...
+
+2.@BeforeEach
+------------------
+->This method which annotated with this annotation executed for before each test method in the test class.
+->Suppose in Test class 3 Test methods there, if we run this Test class before these 3 Test methods run this BeforeEach annotated method run for each method.
+->The use of this , before execute test method if we want to set some data then this will be usefull instead of writing setting data code multiple times.
+
+
+3.@AfterAll
+--------------
+->The method which annoated with this annotation will executes once after all Test methods got executed.
+->The should be static
+->The use of this annotation is , If we want to close something /clean (like opened DB connection should close/server clone) or if want do any operartion
+  after all the test methods got executes.
+
+
+4.@AterEach
+------------------
+->This method which annotated with this annotation executed for after each test method in the test class.
+->Suppose in Test class 3 Test methods there, if we run this Test class after these 3 Test methods got executed this AfterEach annotated method run for each method.
+->The use of this , after execute test method if we want to clear already setted data then this will be usefull instead of writing cleaning setted data
+  code multiple times.
+
+
+ @BeforeAll    	--->     @BeforeEach		----------> @Test            -------->@AfterEach   ----> @AfterAll							
+(Cls Level SetUp)	(SetUp ForEach Test)               (Test Execution)	     (CleanUP)          (Cls level CleanUp)
+
+Example :- ( flow how calling the above annotated methods step by step)
+------------
+
+package com.junit.Junit.Testing.service;
+import com.junit.Junit.Testing.entity.Customer;
+import com.junit.Junit.Testing.repository.CustomerRepository;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
+@ExtendWith(MockitoExtension.class)
+class CustomerServiceTest {
+
+    @Mock
+    CustomerRepository customerRepository;
+
+    @InjectMocks
+    CustomerService customerService;
+
+    @BeforeAll
+    public static void checkBeforeAll(){
+        System.out.println("This is BeforeAll !!");
+    }
+    @BeforeEach
+    public void checkBeforeEach(){
+        System.out.println("This is checkBeforeEach !!");
+    }
+
+    @AfterAll
+    public static void checkAfterAll(){
+        System.out.println("This is AfterAll !!");
+    }
+
+    @AfterEach
+    public void checkAfterEach(){
+        System.out.println("This is AfterEach !!");
+    }
+
+    @Test
+    void saveCustomerShouldSaveCustomerSuccessFully(){
+        Customer customer = new Customer();
+
+        customer.setCustomerId(301);
+        customer.setCustomerName("mahi");
+        customer.setCustomerMobile("7777777");
+
+        Mockito.when(customerRepository.save(customer)).thenReturn(customer);
+        Customer savedCustomer= customerService.saveCustomer(customer);
+
+        Assertions.assertNotNull(savedCustomer);
+        Assertions.assertEquals(customer.getCustomerName(),savedCustomer.getCustomerName());
+        Assertions.assertEquals(customer.getCustomerMobile(),savedCustomer.getCustomerMobile());
+
+    }
+
+    @Test
+    public void anotherTestMethod(){
+        System.out.println("This is another test method !! ");
+}}
+
+
+o/p
+-------
+This is BeforeAll !!
+This is checkBeforeEach !!
+This is another test method !! 
+This is AfterEach !!
+This is checkBeforeEach !!
+14:40:01.325 [main] INFO com.junit.Junit.Testing.service.CustomerService -- saveCustomer() started
+This is AfterEach !!
+This is AfterAll !!
+---
+
+
+
+Testing the method which return void
+(or)
+Mocking void method using doNothing() method
+===============================================
+->before we did test for save() method, save returns obj after save in db.
+->here we are going to do deleteById() method, which will return void
+->for this void return methods we have ro use doNothing() method
+  and verify() -> in this are verifying in the particular repository particular method particular times invoked or not,
+  if invokes then test pass other wise fail 
+
+
+ @Test
+    public void deleteCustomerByIdShouldDeleteCustomer() {
+        Mockito.doNothing().when(customerRepository).deleteById(1L);   //donothing when in custepo deleteById() invoked
+        customerService.deleteCustomerById(1);                         //actual method deletecustomerbyid invoking  in service class
+        Mockito.verify(customerRepository, Mockito.times(1)).deleteById(1L); //checking in custrepo deletebyid method invokes 1 time or not
+}
+
+---
+
+
+
+
+Test Private methods
+============================
+->Actually testing directly for private methods are not recommended.
+->Test public methods which use the private methods
+->We can provide testing for private methods by using java Reflection 
+ (bc private is not accessible in other classess).
+
+->Below is the example for test private methods.
+
+    //private method (in project i used this get user by name so in this method checking name is empty or not, if not empty true else false
+    private boolean validateCustomerName(String customerName) {
+        return StringUtils.hasText(customerName);
+    }
+
+
+    //Test for name valid(name there) scenario
+    @Test
+    public void testPrivateMethod_validateCustomerNameIfNameValid() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+	
+
+        Method validateCustomerName = CustomerService.class.getDeclaredMethod("validateCustomerName", String.class);
+        validateCustomerName.setAccessible(true);
+
+        Boolean customerName =(Boolean) validateCustomerName.invoke(customerService, "mahi");
+        Assertions.assertTrue(customerName);
+    }
+
+
+
+   //Test for name valid(name there) scenario
+    @Test
+    public void testPrivateMethod_validateCustomerNameIfNameValid() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+	
+
+        Method validateCustomerName = CustomerService.class.getDeclaredMethod("validateCustomerName", String.class);
+        validateCustomerName.setAccessible(true);
+
+        Boolean customerName =(Boolean) validateCustomerName.invoke(customerService, "");
+        Assertions.assertFalse(customerName);
+    }
+
+
+
+
+
+Testing Exceptional Scenarios
+====================================
+->In the method if any scenarios of exception will come for those also we have to test cases
+->suppose when fetching time if the provided name is not valid in code we are raising IllegalArguement, and 
+  when the provided name guy not present in the DB then that time we are throwing NoSuchElementException
+  for this both we have provide test cases , is this correctly throwing exception are not like that, 
+  there a method assertThrows() by using this we acheive this.
+
+Service class of findCustomerByName:-
+--------------------------------------------
+    public Customer findCustomerByName(String customerName) {
+    	log.info("findCustomerByName() started ");
+
+        if (!validateCustomerName(customerName)) {
+            throw new IllegalArgumentException("customer name invalid  , name: " + customerName);
+        }
+
+        return customerRepository.findByCustomerName(customerName)
+                .orElseThrow(() -> new NoSuchElementException("Data With customer name not present; name: " + customerName));
+
+       }
+
+       private boolean validateCustomerName(String customerName) {
+        log.info("validateCustomerName ; name is valid ? " + StringUtils.hasText(customerName));
+        return StringUtils.hasText(customerName);
+      }
+
+Test Cases methods :-
+----------------------------
+
+
+    /**
+     * below three test for findCustomerByName().
+     * one is should return customer -> successpath.
+     * second is when name is null,empty,whitespace then illegalargument should raise.
+     * third is when provided name is not present in then nosuchelement should raise.
+     */
+   
+    //test find customer by name should give customer info
+    @Test
+    public void findCustomerByNameShouldReturnCustomerSuccessfully() {
+        String customerName = "mahi";
+        Customer customer = new Customer(10L, customerName, "5585");
+
+        Mockito.when(customerRepository.findByCustomerName(customerName)).thenReturn(Optional.of(customer));
+
+        Customer resultCustomer = customerService.findCustomerByName(customerName);
+        Assertions.assertNotNull(resultCustomer);
+        Assertions.assertEquals(customerName, resultCustomer.getCustomerName());
+        Assertions.assertEquals(customer.getCustomerMobile(), resultCustomer.getCustomerMobile());
+
+    }
+
+    //test find customer by name should throw Ilegal when name is invalid(""," ",null)
+    @Test
+    public void findCustomerByNameShouldThrowIllegalArgumentExceptionForInvalidName() {
+        String customerName = "";
+
+        //when findCustomerByName invoking time if IllegaArguementException then catch it
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            customerService.findCustomerByName(customerName);
+        });
+
+        //here  reason  of exception and this static provided message are same or not,  if yes test pass
+        Assertions.assertTrue(exception.getMessage().contains("customer name invalid"));
+        //when exception means save() should not invoke here checking is it invoking zero times, if yes (0 times) then pass or else fail.
+        Mockito.verify(customerRepository, Mockito.times(0)).save(Mockito.any(Customer.class));
+
+    }
+
+    //test find customer by name should throw NoSuchElement  when name not found in db
+    @Test
+    public void findCustomerByNameShouldThrowNoSuchElementExceptionWhenCustomerNotFound() {
+        String customerName = "h";
+
+        Mockito.when(customerRepository.findByCustomerName(customerName)).thenReturn(Optional.empty());
+
+        //when findCustomerByName invoke times if nosuchelementexception catch it
+        NoSuchElementException exception = Assertions.assertThrows(NoSuchElementException.class, () -> {
+            customerService.findCustomerByName(customerName);
+        });
+
+        //here  reason  of exception and this static provided message are same or not,  if yes test pass
+        Assertions.assertTrue(exception.getMessage().contains("Data With customer name not present"));
+        //when exception means save() should not invoke here checking is it invoking zero times, if yes (0 times) then pass or else fail.
+        Mockito.verify(customerRepository, Mockito.times(0)).save(Mockito.any(Customer.class));
+    }
+
+---
+
+
+
+
+
+Difference B/W @Mock and @Spy
+======================================
+->Both @Mock and @Spy used widely in unitesting springboot.
+->But both have different puposes/difference
+
+@Mock
+<---->
+->A fake object where all methods are stubbed
+->Stubbed means predefining the behaviour for a method when it is called durin testing.
+  (like,  when().thenReturn();).
+
+->When we use mock then it not invoke real method just return predefines result or default.
+->Suppose when we are  testin save() , then that time we should not really save data in db. just we have to test the behaviour.
+
+
+@Spy
+<---->
+->A real object where only some methods are stubbed
+->when we spy it invoke real method but we can also stubb or override.
+->allow real method calls by default, and you can override/stub specific methods with doReturn(...)
+->Acctually there another annonation is there @SpyBean
+ ->@SpyBean also same like @Spy (behave like real object invoke execute real time of method unless stubbed)
+ ->But difference is @Spy does not spring context(autoamtic bean creation by spring) so that's why we have manually create object of class(for which cls method want to test)
+ ->But @SpyBean uses Spring context so it uses already exsiting bean
+
+ex:-  @SpyBean
+---------------
+
+@SpringBootTest
+class ToyServiceSpyBeanTest {
+
+    @SpyBean
+    private ToyService toyService;
+
+    @Test
+    void testSaveWithSpyBean() {
+        // Override behavior of save() method
+        doReturn("Mocked Save").when(toyService).save("Teddy");
+
+        String result = toyService.save("Teddy");
+
+        assertEquals("Mocked Save", result);
+    }
+
+    @Test
+    void testDeleteWithSpyBean() {
+        // Calls real method -> should throw exception
+        assertThrows(UnsupportedOperationException.class, () -> {
+            toyService.delete("Teddy");
+        });
+    }
+}
+
+
+
+
+ex2
+----
+  @Test
+    public void anotherTestMethod() {
+//        System.out.println("This is another test method !! ");
+        ArrayList mockedList = Mockito.mock(ArrayList.class);
+        mockedList.add("hello");
+        Mockito.verify(mockedList).add("hello");
+        Assertions.assertEquals(0, mockedList.size());
+    }
+
+    @Test
+    public void anotherTestMethod1() {
+//        System.out.println("This is another test method !! ");
+        ArrayList mockedList = Mockito.spy(ArrayList.class);
+        mockedList.add("hello");
+        Mockito.verify(mockedList).add("hello");
+        Assertions.assertEquals(0, mockedList.size());
+    }
+---
+
+
+
+
+Test Controller layer
+============================
+->Tried different styles
+->note point is when we run test conrtoller server(tomcat) not run.
+->first style is directly contact to db(when test save it saves)
+->second style is stubbing when some method called(save method call) return something, so here data wont save in db
+->third is use h2 database for test(test env uses h2) . 
+   note point is here test will pass but we unable to see h2-console bcz tomcat not run so browser dont know about h2-console.
+
+
+
+first style code
+----------------------------
+package com.junit.Junit.Testing.controller;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.junit.Junit.Testing.entity.Customer;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class CustomerControllerTest {
+
+    //MockMvc is for testing controller endpoints (HTTP-like tests) without starting a server.
+    @Autowired
+    private MockMvc mockMvc;
+    
+    //for converion
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void testSaveCustomerShouldSaveSuccessfully() throws Exception {
+        // Arrange
+        Customer customer = new Customer();
+//        customer.setCustomerId(120L);
+        customer.setCustomerName("varun");
+        customer.setCustomerMobile("55555");
+
+        // Act & Assert
+        mockMvc.perform(
+                        post("/junit-testing/save-customer")  //we have to pass endpoint of save data
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(customer))
+                )
+                .andExpect(status().isOk()); // or whatever status your controller returns
+    }
+}
+
+
+
+Second style code (not saves in db , just stubbing)
+-------------------------------------------------------
+package com.junit.Junit.Testing.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.junit.Junit.Testing.entity.Customer;
+import com.junit.Junit.Testing.service.CustomerService;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class CustomerControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private CustomerService customerService;
+
+    /**
+     * TestConfiguration is,
+     * It is a special Spring Boot annotation used to define test-specific beans.
+     * It works like @Configuration, but it's only applied during testing.
+     */
+    @TestConfiguration
+    static class MockConfig {
+        @Bean
+        public CustomerService customerService() {
+            return Mockito.mock(CustomerService.class);
+        }
+    }
+
+    @Test
+    void testSaveCustomerShouldSaveSuccessfully() throws Exception {
+       
+        // Arrange
+        Customer customer = new Customer();
+        customer.setCustomerName("naveen");
+        customer.setCustomerMobile("11111");
+
+        // Stub the service method
+        Mockito.when(customerService.saveCustomer(Mockito.any(Customer.class)))
+                .thenReturn(customer);
+
+        // Act & Assert
+        mockMvc.perform(
+                        post("/junit-testing/save-customer")  //we have to pass endpoint of save data
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(customer))
+                )
+                .andExpect(status().isOk()); // or whatever status your controller returns
+    }
+}
+
+
+test will pass
+
+
+Third Style (using h2 for test) this is recommended
+------------------------------------------------------------
+
+package com.junit.Junit.Testing.controller;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.junit.Junit.Testing.entity.Customer;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class CustomerControllerTest {
+
+    //MockMvc is for testing controller endpoints (HTTP-like tests) without starting a server.
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+
+    @Test
+    public void testSaveCustomerShouldSaveSuccessfully() throws Exception {
+     
+       Customer customer = new Customer();
+        customer.setCustomerName("varun");
+        customer.setCustomerMobile("55555");
+
+
+
+        mockMvc.perform(
+                        MockMvcRequestBuilders.post("/junit-testing/save-customer")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(customer))
+                )
+                .andExpect(status().isOk());
+        
+    }
+}
+
+dependency:-
+        <dependency>-->
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>test</scope>
+        </dependency>
+
+
+properties in test:-
+->copy resource folder from main folder and paste inside test
+	spring.datasource.url=jdbc:h2:mem:tutorial
+	spring.datasource.driverClassName=org.h2.Driver
+	spring.datasource.username=sa
+	spring.datasource.password=password
+	spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+---
+
+
+package com.junit.Junit.Testing.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.junit.Junit.Testing.entity.Customer;
+import com.junit.Junit.Testing.service.CustomerService;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class CustomerControllerTest {
+
+    //MockMvc is for testing controller endpoints (HTTP-like tests) without starting a server.
+    @Autowired
+    private MockMvc mockMvc;
+
+    //for conversion (obj to json vice versa)
+    @Autowired
+    private ObjectMapper objectMapper;
+
+   
+
+    @Test
+    void testSaveCustomerShouldSaveSuccessfully() throws Exception {
+        // Arrange
+        Customer customer = new Customer();
+//        customer.setCustomerId(120L);
+        customer.setCustomerName("naveen");
+        customer.setCustomerMobile("11111");
+
+        // Act & Assert
+        mockMvc.perform(
+                        post("/junit-testing/save-customer")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(customer))
+                )
+                .andExpect(status().isOk()); // or whatever status your controller returns
+    }
+
+    
+
+
+}
+
+original controller class method:-
+@PostMapping("/save-customer")
+    public Customer saveCustomer(@RequestBody Customer customer) {
+        log.info("saveCustomer() started");
+        log.info("customer: {}", customer.getCustomerName());
+        return customerService.saveCustomer(customer);
+    }
+
+
+is this correct
+used h2 db
+
+  <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>test</scope>
+        </dependency>
+
+spring.application.name=Junit-Testing
+
+spring.datasource.url=jdbc:h2:mem:tutorial
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+
+
+
+
+
+
+
+•         Java 11+, Spring Framework, Angular 10+, microservices, and design patterns.
+•         Cloud: Preferably Azure (App Service, Event Hub, Key Vault, Logic App, ACI), Spring Kafka 
+•          Database: MongoDB, Oracle DB
+•          DevOps: CI/CD with GitHub Actions, Terraform
+•          Monitoring Tools: Dynatrace, Azure App Insights
+
+
+
+
+
+
+Whether you're starting out or revising before interviews, this list covers everything from arrays and strings to graphs and dynamic programming.
+
+Here’s the list:
+
+Minimum Window Substring
+Valid Parentheses
+Merge Two Sorted Lists
+Maximum Subarray
+Two Sum
+Reverse Integer
+Valid Anagram
+Fizz Buzz
+Reverse a String
+Intersection of Two Arrays
+Palindrome Number
+Linked List Cycle
+Add Two Numbers
+Longest Substring Without Repeating Characters
+Implement Stack using Queues
+Serialize and Deserialize Binary Tree
+Word Search
+Subarray Sum Equals K
+Word Break II
+Kth Largest Element in an Array
+Implement Trie (Prefix Tree)
+The Skyline Problem
+Palindrome Pairs
+Alien Dictionary
+LRU Cache
+Find the Duplicate Number
+Longest Increasing Subsequence
+Largest Rectangle in Histogram
+Number of Islands
+Binary Tree Maximum Path Sum
+Merge k Sorted Lists
+Text Justification
+Shortest Path in Binary Matrix
+Median of Two Sorted Arrays
+Regular Expression Matching
+Merge Intervals
+Maximum Depth of Binary Tree
+Trapping Rain Water
+Container With Most Water
+3Sum
+Validate Binary Search Tree
+Valid Number
+Median of Data Stream
+Regular Expression Parser
+Design a Search Autocomplete System
+Serialize and Deserialize BST
+Number of Islands
+Implement Basic Calculator
+Binary Tree Maximum Path Sum
+Shortest Path in Binary Matrix
