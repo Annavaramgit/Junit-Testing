@@ -112,7 +112,7 @@ class CustomerControllerTest {
     //find customer by name - unhappy
     @Test
     public void findCustomerByNameShouldReturnNoContent() throws Exception {
-        //if we put this line in coment test will pass
+        // even though if we put this line in comment test will pass
         Mockito.when(customerService.findCustomerByName(null)).thenReturn(null);
 
         mockMvc.perform(
